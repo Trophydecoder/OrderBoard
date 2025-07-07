@@ -1,0 +1,35 @@
+.back-container {
+    padding: 1rem 0;
+  
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: transparent;
+      color: #13233f;
+      border: 2px solid #13233f;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+  
+      i {
+        font-size: 1rem;
+      }
+  
+      &:hover {
+        background-color: #13233f;
+        color: #fff;
+        transform: translateX(-2px);
+      }
+  
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(19, 35, 63, 0.3);
+      }
+    }
+  }
+  

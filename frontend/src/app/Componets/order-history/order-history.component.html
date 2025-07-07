@@ -1,0 +1,67 @@
+<div class="order-history">
+    <h2>
+      <i class="fas fa-history"></i> Order History
+    </h2>
+  
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <input
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        placeholder="Search by customer name..."
+      />
+      <i class="fas fa-search"></i>
+    </div>
+  
+    <!-- Table for Desktop -->
+    <div class="table-container">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>whatsapp Number</th>
+            <th>Date</th>
+  
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of paginatedOrders">
+            <td>{{ order.id }}</td>
+            <td>{{ order.customerName }}</td>
+            <td>{{ order.whatsappNumber}}</td>
+            <td>{{ order.orderDate}}</td>
+   
+            <td>{{ order.totalPrice }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+    <!-- Cards for Mobile -->
+    <div class="orders-cards">
+      <div *ngFor="let order of paginatedOrders" class="order-card">
+        <h3>Order #{{ order.id }}</h3>
+        <p><strong>Customer:</strong> {{ order.customerName }}</p>
+        <p><strong>Date:</strong> {{ order.orderDate }}</p>
+        <p><strong>Total:</strong> {{ order.totalPrice }}</p>
+      </div>
+    </div>
+  
+    <!-- Pagination -->
+    <div class="pagination">
+      <button (click)="prevPage()" [disabled]="currentPage === 1" class="btn">
+        <i class="fas fa-chevron-left"></i> Previous
+      </button>
+      <span>Page {{ currentPage }}</span>
+      <button
+        (click)="nextPage()"
+        [disabled]="(currentPage * itemsPerPage) >= filteredOrders.length"
+        class="btn"
+      >
+        Next <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+  
