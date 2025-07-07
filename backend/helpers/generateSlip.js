@@ -9,7 +9,7 @@ function generateOrderSlip(order, items, callback) {
 
   doc.pipe(stream);
 
-  // ✅ Header
+  // git commit -m "first commit"Header
   doc
     .fillColor('#0B3D91')
     .fontSize(24)
