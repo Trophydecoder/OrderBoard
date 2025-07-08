@@ -3,7 +3,7 @@ import { environment } from '../../../environments/environment';
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Observable, of } from 'rxjs';
-
+import { SafehelperService } from './safehelper.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,9 +11,11 @@ export class AuthService {
   api = environment.apiUrl;
 
   constructor(
-    private http: HttpClient,
+    private http: HttpClient, private safeHelper: SafehelperService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
+
+  
 
   register(data: any) {
     return this.http.post(`${this.api}/RegisterUser`, data);
@@ -25,7 +27,7 @@ export class AuthService {
 
   getProfile(): Observable<any> {
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem('token');
+      const token =  this.safeHelper.getItem('token');
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
       return this.http.get(`${this.api}/user/profile`, { headers });
     } else {
@@ -49,7 +51,7 @@ export class AuthService {
 
   //reset while logged in
   resetPasswordLoggedIn(newPassword: string): Observable<any> {
-    const token = localStorage.getItem('token');
+    const token =  this.safeHelper.getItem('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.post(`${this.api}/reset-password-logged-in`, { newPassword }, { headers });
   }
@@ -60,7 +62,7 @@ export class AuthService {
 
   //frequent customers
   getFrequentCustomers() {
-    const token = localStorage.getItem('token');
+    const token =  this.safeHelper.getItem('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<any[]>(`${this.api}/frequent-customers`, { headers });
   }
@@ -69,7 +71,7 @@ export class AuthService {
 
   //creating order
   createOrder(orderData: any) {
-    const token = localStorage.getItem('token');
+    const token =  this.safeHelper.getItem('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.post(`${this.api}/create-order`, orderData, { headers });
   }
@@ -78,7 +80,7 @@ export class AuthService {
 
     // Fetch orders for logged-in user
   getOrders(): Observable<any[]> {
-    const token = localStorage.getItem('token');
+    const token = this.safeHelper.getItem('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<any[]>(`${this.api}/order-history`, { headers });
   }
@@ -87,7 +89,7 @@ export class AuthService {
 
   //settings
   updateProfile(data: { username: string; email: string }): Observable<any> {
-    const token = localStorage.getItem('token');
+    const token = this.safeHelper.getItem('token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
   
     return this.http.put(`${this.api}/auth/update`, data, { headers });
