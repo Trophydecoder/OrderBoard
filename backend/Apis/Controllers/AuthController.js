@@ -59,10 +59,8 @@ module.exports.register = async (req, res) => {
   });
 };
 
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const database = require('../config/db'); // your DB connection
-const { secret, expiresIn } = require('../../configurations/jwt');
+
+
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;

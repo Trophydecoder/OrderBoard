@@ -22,14 +22,17 @@ export class AuthService {
   }
 
   login(data: any) {
-    return this.http.post(`${this.api}/LoginUser`, data);
+    return this.http.post(`${environment.apiUrl}/LoginUser`, data);
+
+    
   }
 
   getProfile(): Observable<any> {
     if (isPlatformBrowser(this.platformId)) {
       const token =  this.safeHelper.getItem('token');
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-      return this.http.get(`${this.api}/user/profile`, { headers });
+      return this.http.post(`${environment.apiUrl}/user/profile`, { headers });
+
     } else {
       return of({ totalOrders: 0 });
     }
