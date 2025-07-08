@@ -11,23 +11,24 @@ const app = express();
 // Middleware
 app.use(express.json()); // Built-in body parser
 
-// CORS Configuration
 const allowedOrigins = [
-  'http://localhost:4200',      // Angular frontend (dev)
-  'https://your-production-domain.com', // Add your production frontend domain
+  'http://localhost:4200', // Angular dev server
+  'https://orderboard-production.up.railway.app', // Your Railway backend
+  'https://your-frontend-domain.com' // Add this when deployed frontend
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like Postman) or from allowed origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('CORS not allowed for this origin: ' + origin));
     }
   },
-  credentials: true, // Allow cookies if needed
+  credentials: true, // if sending cookies or auth headers
 }));
+
+  
 
 // ✅ Health check route for Railway/Vercel testing
 app.get('/api/health', (req, res) => {
