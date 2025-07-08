@@ -15,7 +15,7 @@ app.use(cors({
   origin: 'http://localhost:4200'
 }));
 
-// ✅ Health check route for Railway testing
+// Health check route for Railway testing
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'OrderBoard API is running ✅' });
 });

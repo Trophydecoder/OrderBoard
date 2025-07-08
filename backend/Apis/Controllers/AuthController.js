@@ -59,26 +59,32 @@ module.exports.register = async (req, res) => {
   });
 };
 
-
-
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const database = require('../config/db'); // your DB connection
+const { secret, expiresIn } = require('../../configurations/jwt');
 
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  // Basic check
+  // Basic input validation
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
 
-  // Find user
   const sql = 'SELECT * FROM users WHERE email = ? LIMIT 1';
   database.query(sql, [email], async (err, results) => {
-    if (err) return res.status(500).json({ message: 'Database error' });
-    if (results.length === 0) return res.status(404).json({ message: 'User not found' });
+    if (err) {
+      console.error('Database error in login:', err);
+      return res.status(500).json({ message: 'Database error', error: err.message });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     const user = results[0];
 
-    // Soft deleted?
     if (user.is_deleted) {
       return res.status(403).json({
         message: 'This account has been deleted. Restore your account to continue.',
@@ -86,19 +92,31 @@ module.exports.login = async (req, res) => {
       });
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Incorrect password' });
+    try {
+      const isMatch = await bcrypt.compare(password, user.password); // check column name!
 
-    // Generate token
-    const token = jwt.sign({
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      plan: user.plan
-    }, secret, { expiresIn });
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Incorrect password' });
+      }
+    } catch (bcryptError) {
+      console.error('Password comparison error:', bcryptError);
+      return res.status(500).json({ message: 'Password verification failed' });
+    }
 
-    // Success
+    let token;
+    try {
+      token = jwt.sign({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        plan: user.plan
+      }, secret, { expiresIn });
+    } catch (jwtError) {
+      console.error('JWT sign error:', jwtError);
+      return res.status(500).json({ message: 'Token generation failed' });
+    }
+
+    // Successful login response
     res.status(200).json({
       message: 'Login successful',
       token,
