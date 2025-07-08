@@ -1,47 +1,29 @@
-#!/usr/bin/env node
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
-const app = require('../app');
-const http = require('http');
+const authRoutes = require('./Apis/Routes/authroutes');
+const orderRoutes = require('./Apis/Routes/orderRoutes');
+const userRoutes = require('./Apis/Routes/UserRoutes');
+const passwordRoutes = require('./Apis/Routes/PasswordRoutes');
 
+const app = express();
+
+// Middleware
+app.use(bodyParser.json());
 app.use(cors({
-  origin: 'http://localhost:4200',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'],     // allowed headers in requests
-  credentials: true                                       // if you use cookies/auth
+  origin: 'http://localhost:4200'
 }));
 
-const server = http.createServer(app);
-
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// ✅ Health check route for Railway testing
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'OrderBoard API is running ✅' });
 });
-server.on('error', onError);
-server.on('listening', onListening);
 
-function normalizePort(val) {
-  const port = parseInt(val, 10);
-  if (isNaN(port)) return val; // named pipe
-  if (port >= 0) return port;  // port number
-  return false;
-}
+// API Routes
+app.use('/api', authRoutes);
+app.use('/api', orderRoutes);
+app.use('/api', userRoutes);
+app.use('/api', passwordRoutes);
 
-function onError(error) {
-  if (error.syscall !== 'listen') throw error;
-  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-    default:
-      throw error;
-  }
-}
-
-function onListening() {
-  const addr = server.address();
-  const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
-  console.log('Listening on ' + bind);
-}
+module.exports = app;
