@@ -3,6 +3,13 @@ const jwt = require('jsonwebtoken');
 const { database ,secret, expiresIn } = require('../../configurations/DatabaseConnections');
 const nodemailer = require('nodemailer');
 
+
+
+
+
+
+
+
 // Utility regex functions
 function isOnlyLetters(str) {
   return /^[A-Za-z\s]+$/.test(str);
@@ -62,27 +69,31 @@ module.exports.register = async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
 
-  // Basic input validation
+  // Basic check
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
 
+  // Find user
   const sql = 'SELECT * FROM users WHERE email = ? LIMIT 1';
   database.query(sql, [email], async (err, results) => {
-    if (err) {
-      console.error('Database error in login:', err);
-      return res.status(500).json({ message: 'Database error', error: err.message });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (err) return res.status(500).json({ message: 'Database error' });
+    if (results.length === 0) return res.status(404).json({ message: 'User not found' });
 
     const user = results[0];
 
+    // Soft deleted?
     if (user.is_deleted) {
       return res.status(403).json({
         message: 'This account has been deleted. Restore your account to continue.',
@@ -90,31 +101,19 @@ module.exports.login = async (req, res) => {
       });
     }
 
-    try {
-      const isMatch = await bcrypt.compare(password, user.password); // check column name!
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ message: 'Incorrect password' });
 
-      if (!isMatch) {
-        return res.status(401).json({ message: 'Incorrect password' });
-      }
-    } catch (bcryptError) {
-      console.error('Password comparison error:', bcryptError);
-      return res.status(500).json({ message: 'Password verification failed' });
-    }
+    // Generate token
+    const token = jwt.sign({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      plan: user.plan
+    }, secret, { expiresIn });
 
-    let token;
-    try {
-      token = jwt.sign({
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        plan: user.plan
-      }, secret, { expiresIn });
-    } catch (jwtError) {
-      console.error('JWT sign error:', jwtError);
-      return res.status(500).json({ message: 'Token generation failed' });
-    }
-
-    // Successful login response
+    // Success
     res.status(200).json({
       message: 'Login successful',
       token,
@@ -127,6 +126,17 @@ module.exports.login = async (req, res) => {
     });
   });
 };
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -207,6 +217,13 @@ module.exports.requestPasswordReset = (req, res) => {
 
 
 
+
+
+
+
+
+
+
 module.exports.resetPassword = (req, res) => {
   const token = req.params.token;
   const { newPassword } = req.body;
@@ -256,6 +273,14 @@ module.exports.resetPassword = (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
 //  Reset password while logged in
 module.exports.resetPasswordLoggedIn = async (req, res) => {
   const userId = req.user.id; // from verifyToken middleware
@@ -301,6 +326,12 @@ module.exports.resetPasswordLoggedIn = async (req, res) => {
 
 
 
+
+
+
+
+
+
 //phase  getUser profile
 
     module.exports.getProfile = (req, res) => {
@@ -334,6 +365,14 @@ module.exports.resetPasswordLoggedIn = async (req, res) => {
       });
     };    
   
+
+
+
+
+
+
+
+
 
 
    module.exports.updateUser = (req, res) => {

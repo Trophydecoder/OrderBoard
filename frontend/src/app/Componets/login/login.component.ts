@@ -19,7 +19,7 @@ export class LoginComponent {
   isLoading = false;        // For login
   isResetLoading = false;   // For forgot password
 
-  constructor(private fb:FormBuilder,  private safeHelper: SafehelperService, private auth: AuthService, private router: Router) {}
+  constructor(private fb:FormBuilder,  private safeHelper: SafehelperService,private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({

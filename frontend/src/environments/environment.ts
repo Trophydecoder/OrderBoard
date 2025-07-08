@@ -1,5 +1,5 @@
 export const environment = {
-    production: true,
-    apiUrl: 'https://orderboard-production.up.railway.app/api'
+    production: false,
+    apiUrl: 'http://localhost:3000/api'
   };
   
