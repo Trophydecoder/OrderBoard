@@ -14,9 +14,15 @@ app.use(cors({
     origin: 'https://order-board-icql7vuoq-trophydecoders-projects.vercel.app'
   }));
 
+  
+
 const path = require('path');
 app.use('/slips', express.static(path.join(__dirname, 'slips')))
 
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'OrderBoard API is running ✅' });
+});
 
 
 
@@ -27,13 +33,7 @@ app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api', passwordRoutes);
 
-// Serve Angular build files
-app.use(express.static(path.join(__dirname, '../frontend/dist/OrderBoardApp')));
 
-// For any route not handled by the API, serve Angular index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist/OrderBoardApp/index.html'));
-});
 
 
 module.exports = app; 
