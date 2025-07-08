@@ -11,43 +11,45 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS Configuration (Allow Angular frontend + handle preflight)
+// ✅ CORS Configuration
 const allowedOrigins = [
-  'http://localhost:4200', // Angular dev
-  'https://orderboard-production.up.railway.app', // Railway backend
-  'https://your-frontend-domain.com', // Future Angular prod
+  'http://localhost:4200',                          // Angular dev server
+  'https://orderboard-production.up.railway.app',   // Railway backend
+  'https://your-frontend-domain.com',               // Production Angular frontend
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow requests with no origin (like Postman) or from allowed origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('CORS not allowed for this origin: ' + origin));
     }
   },
-  credentials: true, // Allow credentials
+  credentials: true, // Allow credentials (cookies, auth headers)
 }));
 
-// ✅ Handle preflight requests
+// ✅ Handle preflight requests for all routes
 app.options('*', cors());
 
-// Routes
+// ✅ Health check route for Railway testing
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'OrderBoard API is running ✅' });
 });
 
+// API Routes
 app.use('/api', authRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', userRoutes);
 app.use('/api', passwordRoutes);
 
-// Fallback 404
+// 404 Fallback route
 app.use((req, res, next) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Error handler
+// Error-handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong on the server!' });
