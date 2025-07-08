@@ -3,8 +3,12 @@
 const app = require('../app');
 const http = require('http');
 
-const port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
+app.use(cors({
+  origin: 'http://localhost:4200',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'],     // allowed headers in requests
+  credentials: true                                       // if you use cookies/auth
+}));
 
 const server = http.createServer(app);
 

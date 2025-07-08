@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../services/services/auth.service';
-
+import { SafehelperService } from '../../services/services/safehelper.service';
 @Component({
   selector: 'app-login',
   standalone: true, 
@@ -19,7 +19,7 @@ export class LoginComponent {
   isLoading = false;        // For login
   isResetLoading = false;   // For forgot password
 
-  constructor(private fb:FormBuilder, private auth: AuthService, private router: Router) {}
+  constructor(private fb:FormBuilder,  private safeHelper: SafehelperService, private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
@@ -40,7 +40,7 @@ export class LoginComponent {
     this.auth.login(this.loginForm.value).subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        localStorage.setItem('token', res.token);
+        this.safeHelper.setItem('token', res.token)
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
