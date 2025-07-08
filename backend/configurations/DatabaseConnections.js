@@ -1,8 +1,7 @@
 require('dotenv').config();
 const mysql = require('mysql');
 
-// Create a connection
-const mysql = require('mysql');
+
 
 const database = mysql.createPool({
   host: process.env.DB_HOST,      // Railway provides this
