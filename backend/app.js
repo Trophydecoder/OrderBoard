@@ -12,7 +12,7 @@ const app = express();
 // Middleware
 app.use(bodyParser.json());
 app.use(cors({
-    origin: 'https://order-board-icql7vuoq-trophydecoders-projects.vercel.app'
+  origin: 'http://localhost:4200'
 }));
 
 // ✅ Health check route for Railway testing
