@@ -1,38 +1,43 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+#!/usr/bin/env node
 
-const app = express();
+const app = require('../app');
+const http = require('http');
 
-// Global error handlers to catch unexpected crashes
-process.on('uncaughtException', err => {
-  console.error('Uncaught Exception:', err);
+const port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+const server = http.createServer(app);
+
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
-process.on('unhandledRejection', err => {
-  console.error('Unhandled Rejection:', err);
-});
+server.on('error', onError);
+server.on('listening', onListening);
 
-app.use(cors({
-  origin: 'http://localhost:4200'  // change as needed
-}));
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+  if (isNaN(port)) return val; // named pipe
+  if (port >= 0) return port;  // port number
+  return false;
+}
 
-app.use(bodyParser.json());
+function onError(error) {
+  if (error.syscall !== 'listen') throw error;
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+    default:
+      throw error;
+  }
+}
 
-// Simple health check route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'API is running ✅' });
-});
-
-// Example auth route
-app.post('/api/LoginUser', (req, res) => {
-  // For demo purposes, just respond success
-  res.json({ message: 'Login endpoint reached' });
-});
-
-// Catch-all 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
-});
-
-module.exports = app;
+function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
+  console.log('Listening on ' + bind);
+}
