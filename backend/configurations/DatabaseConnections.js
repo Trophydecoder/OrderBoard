@@ -2,15 +2,17 @@ require('dotenv').config();
 const mysql = require('mysql');
 
 // Create a connection
-const conn = mysql.createConnection({
-  host: 'localhost',
-  port: 3307, 
-  user: 'root',
-  password: '', 
-  database: 'orderboard_db',
+const mysql = require('mysql');
+
+const database = mysql.createPool({
+  host: process.env.DB_HOST,      // Railway provides this
+  port: process.env.DB_PORT || 3306, // Railway may provide port, or default 3306
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME
 });
 
-console.log(' Database connected');
+module.exports = { database };
 
 module.exports = {
   database: conn,
