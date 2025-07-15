@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { SettingsComponent } from "../../Componets/settings/settings.component";
 import { BackComponent } from "../../Componets/back/back.component";
 
@@ -6,7 +6,8 @@ import { BackComponent } from "../../Componets/back/back.component";
   selector: 'app-settings-page',
   imports: [SettingsComponent, BackComponent],
   templateUrl: './settings-page.component.html',
-  styleUrl: './settings-page.component.scss'
+  styleUrl: './settings-page.component.scss',
+  changeDetection:ChangeDetectionStrategy.OnPush
 })
 export class SettingsPageComponent {
 

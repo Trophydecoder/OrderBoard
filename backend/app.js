@@ -11,11 +11,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// ✅ CORS Configuration
+//  CORS Configuration
 const allowedOrigins = [
-  'http://localhost:4200',                          // Angular dev server
-  'https://orderboard-production.up.railway.app',   // Railway backend
-  'https://your-frontend-domain.com',               // Production Angular frontend
+  'http://localhost:4200',                          // Angular dev server            // Production Angular frontend
 ];
 
 app.use(cors({
@@ -30,13 +28,9 @@ app.use(cors({
   credentials: true, // Allow credentials (cookies, auth headers)
 }));
 
-// ✅ Handle preflight requests for all routes
+//  Handle preflight requests for all routes
 app.options('*', cors());
 
-// ✅ Health check route for Railway testing
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'OrderBoard API is running ✅' });
-});
 
 // API Routes
 app.use('/api', authRoutes);

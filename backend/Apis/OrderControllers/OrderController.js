@@ -4,38 +4,38 @@ const axios = require('axios');
 const path = require('path');
 
 
+
+// Helpers
 function isOnlyLetters(str) {
   return /^[A-Za-z\s]+$/.test(str);
 }
-
 function isValidWhatsAppNumber(number) {
   return /^(0\d{9}|\+27\d{9})$/.test(number);
 }
-
 function convertToInternational(number) {
   return number.startsWith('0') ? '+27' + number.slice(1) : number;
 }
 
+// WhatsApp API Config
 const instanceId = 'instance128374';
 const token = 'q5k4ty84gn526a4y';
 
 function sendWhatsAppMessage(toNumber, message) {
   const url = `https://api.ultramsg.com/${instanceId}/messages/chat?token=${token}`;
-
   return axios.post(url, {
     to: toNumber,
     body: message
   }, {
-    headers: {
-      'Content-Type': 'application/json'
-    }
+    headers: { 'Content-Type': 'application/json' }
   });
 }
 
+// Create Order Controller
 module.exports.createOrder = (req, res) => {
   const userId = req.user.id;
   const { customerName, whatsappNumber, items } = req.body;
 
+  // Input validation
   if (!customerName || !whatsappNumber || !items?.length) {
     return res.status(400).json({ message: 'Missing required order data' });
   }
@@ -45,15 +45,15 @@ module.exports.createOrder = (req, res) => {
   if (!isValidWhatsAppNumber(whatsappNumber)) {
     return res.status(400).json({ message: 'Invalid WhatsApp number' });
   }
-
   const finalNumber = convertToInternational(whatsappNumber);
 
-  // ✅ FIX: Calculate totalPrice correctly
+  // Calculate total price
   const totalPrice = items.reduce((sum, item) => {
     const itemTotal = parseFloat(item.price) * parseInt(item.quantity);
     return sum + itemTotal;
   }, 0);
 
+  // Check free plan monthly limit
   const countQuery = `
     SELECT COUNT(*) AS count 
     FROM orders 
@@ -62,7 +62,6 @@ module.exports.createOrder = (req, res) => {
       AND YEAR(orderDate) = YEAR(NOW())
       AND isDeleted = 0
   `;
-
   database.query(countQuery, [userId], (err, result) => {
     if (err) return res.status(500).json({ message: 'Error checking order limit' });
 
@@ -71,61 +70,74 @@ module.exports.createOrder = (req, res) => {
       return res.status(403).json({ message: 'Free plan limit reached: Max 15 orders per month' });
     }
 
-    const insertSql = `
-      INSERT INTO orders (user_id, customerName, whatsappNumber, totalPrice, orderDate, items)
-      VALUES (?, ?, ?, ?, NOW(), ?)
+    // Find user-specific order number
+    const findMaxQuery = `
+      SELECT MAX(user_order_number) AS maxOrder
+      FROM orders
+      WHERE user_id = ?
     `;
-    const itemsJson = JSON.stringify(items);
-
-    database.query(insertSql, [userId, customerName, finalNumber, totalPrice, itemsJson], (err2, orderResult) => {
-      if (err2) {
-        console.error('Order insert error:', err2);
-        return res.status(500).json({ message: 'Order insert failed' });
+    database.query(findMaxQuery, [userId], (maxErr, maxResult) => {
+      if (maxErr) {
+        console.error('Error finding max order number:', maxErr);
+        return res.status(500).json({ message: 'Database error.' });
       }
+      const nextOrderNumber = (maxResult[0].maxOrder || 0) + 1;
 
-      const order = {
-        customerName,
-        whatsappNumber: finalNumber,
-        totalPrice
-      };
+      // Insert order
+      const insertSql = `
+        INSERT INTO orders (user_id, customerName, whatsappNumber, totalPrice, orderDate, items, user_order_number)
+        VALUES (?, ?, ?, ?, NOW(), ?, ?)
+      `;
+      const itemsJson = JSON.stringify(items);
 
-      generateOrderSlip(order, items, (err3, pdfPath) => {
-        if (err3) {
-          console.error('PDF generation failed:', err3);
-          return res.status(500).json({ message: 'Order created but slip generation failed' });
+      database.query(insertSql, [userId, customerName, finalNumber, totalPrice, itemsJson, nextOrderNumber], (err2, orderResult) => {
+        if (err2) {
+          console.error('Order insert error:', err2);
+          return res.status(500).json({ message: 'Order insert failed' });
         }
 
-        const filename = path.basename(pdfPath);
-        const publicPdfUrl = `http://localhost:3000/slips/${filename}`;
-        const message = `Hello ${customerName},\n\nThank you for your order!\nYou can view your order slip here:\n${publicPdfUrl}\n\nTotal Price: R${totalPrice.toFixed(2)}`;
+        const order = {
+          customerName,
+          whatsappNumber: finalNumber,
+          totalPrice,
+          userOrderNumber: nextOrderNumber
+        };
 
-        console.log("Sending WhatsApp message to:", finalNumber);
-        console.log("Message:", message);
+        // Generate slip
+        generateOrderSlip(order, items, (err3, pdfPath) => {
+          if (err3) {
+            console.error('PDF generation failed:', err3);
+            return res.status(500).json({ message: 'Order created but slip generation failed' });
+          }
 
-        sendWhatsAppMessage(finalNumber, message)
-          .then(() => {
-            return res.status(201).json({
-              message: 'Order created successfully and slip sent on WhatsApp',
-              slipPath: pdfPath
+          const filename = path.basename(pdfPath);
+          const publicPdfUrl = `http://localhost:3000/slips/${filename}`;
+          const message = `🧾 *Order #${nextOrderNumber}*\n👤 Customer: ${customerName}\n💵 Total: R${totalPrice.toFixed(2)}\n📄 View Slip: ${publicPdfUrl}`;
+
+          console.log("Sending WhatsApp message to:", finalNumber);
+          console.log("Message:", message);
+
+          sendWhatsAppMessage(finalNumber, message)
+            .then(() => {
+              return res.status(201).json({
+                message: 'Order created and WhatsApp sent successfully',
+                orderNumber: nextOrderNumber,
+                slipPath: pdfPath
+              });
+            })
+            .catch((whatsappErr) => {
+              console.error('WhatsApp sending failed:', whatsappErr.response?.data || whatsappErr.message);
+              return res.status(201).json({
+                message: 'Order created but WhatsApp sending failed',
+                orderNumber: nextOrderNumber,
+                slipPath: pdfPath
+              });
             });
-          })
-          .catch((whatsappErr) => {
-            if (whatsappErr.response) {
-              console.error("UltraMsg error:", whatsappErr.response.data);
-            } else {
-              console.error("Send error:", whatsappErr.message);
-            }
-            return res.status(201).json({
-              message: 'Order created but WhatsApp sending failed',
-              slipPath: pdfPath
-            });
-          });
+        });
       });
     });
   });
 };
-
-
 
 module.exports.getOrderHistory = (req, res) => {
   const userId = req.user.id;

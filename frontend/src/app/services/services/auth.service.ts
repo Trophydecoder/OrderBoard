@@ -49,6 +49,7 @@ export class AuthService {
     );
   }
 
+  
   //reset while logged in
   resetPasswordLoggedIn(newPassword: string): Observable<any> {
     const token =  this.safeHelper.getItem('token');

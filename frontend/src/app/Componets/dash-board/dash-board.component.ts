@@ -1,19 +1,23 @@
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../services/services/auth.service';
 import { jwtDecode } from 'jwt-decode';
 
+
+
+
+
 @Component({
   selector: 'app-dash-board',
-  imports: [],
+  imports: [CommonModule], 
   templateUrl: './dash-board.component.html',
   styleUrl: './dash-board.component.scss'
 })
 export class DashBoardComponent implements OnInit  {
   username: string = '';
-  totalOrders: number = 0;
+  monthlyOrders: number = 0;
   plan: string = 'free'; // default to "free" lowercase for badge class
 
   constructor(
@@ -21,6 +25,7 @@ export class DashBoardComponent implements OnInit  {
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
+  
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -30,11 +35,12 @@ export class DashBoardComponent implements OnInit  {
         this.username = decoded.username;
       }
     }
+    
 
-    // Fetch total orders and plan
+    // Fetch  monthlyOrderss and plan
     this.auth.getProfile().subscribe({
       next: (res: any) => {
-        this.totalOrders = res.totalOrders || 0;
+        this.monthlyOrders = res.monthlyOrders || 0;
         this.plan = (res.plan || 'free').toLowerCase(); // Normalize plan
       },
       error: () => {
@@ -43,6 +49,7 @@ export class DashBoardComponent implements OnInit  {
           title: 'Error',
           text: 'Failed to load your profile.',
           confirmButtonColor: '#0B3D91'
+          
         });
       }
     });

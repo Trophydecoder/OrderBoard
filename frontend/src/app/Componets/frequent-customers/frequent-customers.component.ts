@@ -10,7 +10,7 @@ import { AuthService } from '../../services/services/auth.service';
   styleUrl: './frequent-customers.component.scss'
 })
 export class FrequentCustomersComponent {
-  frequentCustomers: any[] = [];
+  frequentCustomers: any[] = [ ];
 
   constructor(private auth: AuthService, private router: Router) {}
 

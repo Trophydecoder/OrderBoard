@@ -334,40 +334,63 @@ module.exports.resetPasswordLoggedIn = async (req, res) => {
 
 //phase  getUser profile
 
-    module.exports.getProfile = (req, res) => {
-      const userId = req.user.id;
-    
-      const userSql = 'SELECT id, username, email, plan FROM users WHERE id = ?';
-      const ordersSql = 'SELECT COUNT(*) AS totalOrders FROM orders WHERE user_id = ? AND isDeleted = 0';
-    
-      database.query(userSql, [userId], (err, userResult) => {
-        if (err) return res.status(500).json({ message: 'User lookup failed' });
-        if (userResult.length === 0) return res.status(404).json({ message: 'User not found' });
-    
-        const user = userResult[0];
-    
-        database.query(ordersSql, [userId], (err2, orderResult) => {
-          if (err2) {
-            console.error('Order count SQL error:', err2);
-            return res.status(500).json({ message: 'Order count failed' });
-          }
-    
-          const totalOrders = (orderResult[0] && orderResult[0].totalOrders) || 0;
-    
-          res.status(200).json({
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            plan: user.plan,
-            totalOrders
-          });
+module.exports.getProfile = (req, res) => {
+  const userId = req.user.id;
+
+  // Get user profile info including created_at
+  const userSql = 'SELECT id, username, email, plan, created_at FROM users WHERE id = ?';
+
+  // Get total orders for all time
+  const ordersSql = 'SELECT COUNT(*) AS totalOrders FROM orders WHERE user_id = ? AND isDeleted = 0';
+
+  // Get total orders for the current month
+  const monthlyOrdersSql = `
+    SELECT COUNT(*) AS monthlyOrders
+    FROM orders
+    WHERE user_id = ? AND isDeleted = 0
+      AND MONTH(created_at) = MONTH(CURRENT_DATE())
+      AND YEAR(created_at) = YEAR(CURRENT_DATE())
+  `;
+
+  // Query user info
+  database.query(userSql, [userId], (err, userResult) => {
+    if (err) return res.status(500).json({ message: 'User lookup failed' });
+    if (userResult.length === 0) return res.status(404).json({ message: 'User not found' });
+
+    const user = userResult[0];
+
+    // Query total orders
+    database.query(ordersSql, [userId], (err2, orderResult) => {
+      if (err2) {
+        console.error('Order count SQL error:', err2);
+        return res.status(500).json({ message: 'Order count failed' });
+      }
+
+      const totalOrders = (orderResult[0] && orderResult[0].totalOrders) || 0;
+
+      // Query monthly orders
+      database.query(monthlyOrdersSql, [userId], (err3, monthlyResult) => {
+        if (err3) {
+          console.error('Monthly order count SQL error:', err3);
+          return res.status(500).json({ message: 'Monthly order count failed' });
+        }
+
+        const monthlyOrders = (monthlyResult[0] && monthlyResult[0].monthlyOrders) || 0;
+
+        // Return full profile data
+        res.status(200).json({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          plan: user.plan,
+          createdAt: user.created_at, // Include user's created_at date
+          totalOrders,
+          monthlyOrders
         });
       });
-    };    
-  
-
-
-
+    });
+  });
+};
 
 
 
