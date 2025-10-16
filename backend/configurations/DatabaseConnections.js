@@ -1,19 +1,20 @@
 require('dotenv').config();
-const mysql = require('mysql');
+const { Pool } = require('pg');
 
-// Create a connection
-const conn = mysql.createConnection({
+const pool = new Pool({
+  user: 'postgres',             // default username
   host: 'localhost',
-  port: 3307, 
-  user: 'root',
-  password: '', 
-  database: 'orderboard_db',
+  database: 'orderboard_db',    // your database
+  password: 'Trophydeleader34#',// your postgres password
+  port: 5432,                   // default postgres port
 });
 
-console.log(' Database connected');
+pool.connect()
+  .then(() => console.log('✅ Connected to PostgreSQL database!'))
+  .catch(err => console.error('❌ Database connection error:', err));
 
 module.exports = {
-  database: conn,
-  secret: process.env.JWT_SECRET ,
-  expiresIn: process.env.JWT_EXPIRES_IN          
+  database: pool,                        // ✅ export pool instead of conn
+  secret: process.env.JWT_SECRET,
+  expiresIn: process.env.JWT_EXPIRES_IN
 };

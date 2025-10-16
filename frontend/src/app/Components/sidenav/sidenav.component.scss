@@ -1,0 +1,133 @@
+/* =========================
+   SIDEBAR STYLING - MOBILE FIRST
+   ========================= */
+.container-main {
+
+  flex-direction: column;
+  font-family: "Poppins", sans-serif;
+  display: none;
+}
+
+.section-main {
+  display: flex;
+}
+
+.sidenav {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 70%; /* mobile width */
+  height: 100vh;
+  background: #1f1f1f;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 1.5rem 1rem;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
+}
+
+.logo h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-weight: 500;
+}
+
+.menu-item i {
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.menu-item span {
+  font-size: 1rem;
+}
+
+.menu-item:hover {
+  background: #e63946;
+  color: #fff;
+}
+
+.menu-item:hover i {
+  color: #fff;
+}
+
+/* Highlight active page */
+.menu-item.active {
+  background: #e63946;
+  color: #fff;
+}
+
+/* Logout pinned to bottom */
+.menu-item.logout {
+  margin-top: auto;
+  background: #444;
+}
+
+.menu-item.logout:hover {
+  background: #d62839;
+}
+
+/* =========================
+   DESKTOP / PC - MIN WIDTH 1024px
+   ========================= */
+@media screen and (min-width: 1024px) {
+    .container-main {
+        display: flex;
+    
+      }
+  .sidenav {
+    width: 250px;
+    padding: 2rem 1.5rem;
+  }
+
+  .logo h4 {
+    font-size: 1.8rem;
+    margin-bottom: 3rem;
+  }
+
+  .menu-item {
+    gap: 1.2rem;
+    padding: 1rem 1.2rem;
+  }
+
+  .menu-item i {
+    font-size: 1.4rem;
+  }
+
+  .menu-item span {
+    font-size: 1.1rem;
+  }
+  .menu-item.logout {
+    background-color: #d62839; /* red background */
+    color: #fff; /* white text */
+  }
+  .menu-item.logout:hover{
+    background-color: #8f000e; /* red background */
+  }
+
+}
+
+/* Optional: hide sidebar off-canvas for mobile with toggle */
+.sidenav.hidden {
+  transform: translateX(-100%);
+}

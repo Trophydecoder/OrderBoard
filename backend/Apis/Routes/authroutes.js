@@ -11,7 +11,7 @@ router.post('/LoginUser', controller.login);
 // router.post('/restore-account', controller.restoreAccount);
 // router.post('/forgot-password/reset',controller.requestPasswordReset);
 router.get('/user/profile', verifyToken,controller.getProfile);
-router.put('/auth/update', verifyToken, controller.updateUser);
+
 
 
 

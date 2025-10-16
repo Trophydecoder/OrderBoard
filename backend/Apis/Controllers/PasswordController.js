@@ -1,99 +1,84 @@
 const { database } = require('../../configurations/DatabaseConnections');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { secret, expiresIn } = require('../../configurations/jwt');
+const { secret } = require('../../configurations/jwt');
 const nodemailer = require('nodemailer');
 
-module.exports.requestPasswordReset = (req, res) => {
+// ----------------- Request Password Reset -----------------
+module.exports.requestPasswordReset = async (req, res) => {
   const { email } = req.body;
-
   if (!email) return res.status(400).json({ message: 'Email is required.' });
 
-  const checkUserSql = 'SELECT id FROM users WHERE email = ? LIMIT 1';
-  database.query(checkUserSql, [email], (err, results) => {
-    if (err) return res.status(500).json({ message: 'Database error' });
+  try {
+    const result = await database.query(
+      'SELECT id, username FROM users WHERE email = $1 AND isDeleted = false LIMIT 1',
+      [email]
+    );
 
-    if (results.length === 0) {
-      return res.status(404).json({ message: 'Email not found' });
+    if (!result.rows.length) {
+      return res.status(404).json({ message: 'Email not found.' });
     }
 
-    const userId = results[0].id;
+    const user = result.rows[0];
+    const token = jwt.sign({ id: user.id }, secret, { expiresIn: '1h' });
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
-    // Create a token valid for 1 hour
-    const token = jwt.sign({ id: userId, email }, secret, { expiresIn: '1h' });
-
-    // Prepare email transporter (use your SMTP config here)
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
-      });
-      console.log('🔐 RESET TOKEN:',token);
-    const resetLink = `http://yourfrontend.com/reset-password/${token}`;
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
 
     const mailOptions = {
-      from: 'no-reply@orderboard.com',
+      from: `"OrderBoard" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Password Reset Request',
-      html: `<p>You requested a password reset. Click <a href="${resetLink}">here</a> to reset your password. This link expires in 1 hour.</p>`
+      subject: 'OrderBoard Password Reset',
+      html: `
+        <p>Hello ${user.username},</p>
+        <p>You requested a password reset. Click <a href="${resetLink}">here</a> to reset your password.</p>
+        <p>This link expires in 1 hour.</p>
+        <p>If you didn’t request this, please ignore this email.</p>
+      `
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Email sending error:', error);
-        return res.status(500).json({ message: 'Failed to send reset email' });
-      }
+    await transporter.sendMail(mailOptions);
+    return res.status(200).json({ message: 'Password reset email sent successfully.' });
 
-      res.status(200).json({ message: 'Password reset email sent successfully' });
-    });
-  });
+  } catch (err) {
+    console.error('Password reset request error:', err);
+    return res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
 };
 
-
-module.exports.resetPassword = (req, res) => {
+// ----------------- Reset Password -----------------
+module.exports.resetPassword = async (req, res) => {
   const { password } = req.body;
-  const token = req.params.token; // Grab the token from URL
+  const { token } = req.params;
 
-  if (!token) {
-    return res.status(400).json({ message: 'Invalid or missing token.' });
-  }
-
-  if (!password) {
-    return res.status(400).json({ message: 'Password is required.' });
-  }
+  if (!token) return res.status(400).json({ message: 'Invalid or missing token.' });
+  if (!password) return res.status(400).json({ message: 'Password is required.' });
 
   try {
-    // Verify JWT token
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        return res.status(400).json({ message: 'Invalid or expired token.' });
-      }
+    const decoded = jwt.verify(token, secret);
+    const userId = decoded.id;
 
-      const userId = decoded.id;
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-      // Hash new password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+    const result = await database.query(
+      'UPDATE users SET password = $1 WHERE id = $2 AND isDeleted = false',
+      [hashedPassword, userId]
+    );
 
-      // Update user password in DB
-      const sql = 'UPDATE users SET password = ? WHERE id = ?';
-      database.query(sql, [hashedPassword, userId], (error, result) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: 'Database error.' });
-        }
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found or already deleted.' });
+    }
 
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ message: 'User not found.' });
-        }
+    return res.status(200).json({ message: 'Password reset successful.' });
 
-        return res.status(200).json({ message: 'Password reset successful.' });
-      });
-    });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: 'Server error.' });
+    console.error('Reset password error:', err);
+    return res.status(400).json({ message: 'Invalid or expired token.' });
   }
 };

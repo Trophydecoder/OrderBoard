@@ -3,83 +3,89 @@ const fs = require('fs');
 const path = require('path');
 
 function generateOrderSlip(order, items, callback) {
-  const doc = new PDFDocument({ margin: 50 });
-  const filePath = path.join(__dirname, `../slips/${order.customerName}-${Date.now()}.pdf`);
+  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const fileName = `${order.customerName.replace(/\s+/g, '_')}-${Date.now()}.pdf`;
+  const filePath = path.join(__dirname, `../slips/${fileName}`);
   const stream = fs.createWriteStream(filePath);
 
   doc.pipe(stream);
 
-  // git commit -m "first commit"Header
+  // ----------------- Header -----------------
   doc
     .fillColor('#0B3D91')
-    .fontSize(24)
+    .fontSize(22)
+    .font('Helvetica-Bold')
     .text('OrderBoard - Order Slip', { align: 'center' })
-    .moveDown();
+    .moveDown(1.5);
 
-  // ✅ Customer info
+  // ----------------- Customer Info -----------------
   doc
     .fontSize(12)
-    .fillColor('#000000')
-    .text(`Customer Name: ${order.customerName}`, { continued: true })
-    .text(`   WhatsApp: ${order.whatsappNumber}`)
-    .text(`Date: ${new Date().toLocaleDateString()}`)
-    .moveDown();
+    .fillColor('#000')
+    .font('Helvetica')
+    .text(`Customer Name: ${order.customerName}`)
+    .text(`WhatsApp: ${order.whatsappNumber}`)
+    .text(`Order Date: ${new Date().toLocaleDateString()}`)
+    .moveDown(1);
 
-  // ✅ Table Header
+  // ----------------- Table Header -----------------
+  const tableTop = doc.y;
   doc
     .fillColor('#0B3D91')
-    .fontSize(14)
-    .text('Product', 70, doc.y, { width: 200, bold: true })
-    .text('Quantity', 250, doc.y, { width: 100, align: 'center', bold: true })
-    .text('Price (R)', 350, doc.y, { width: 100, align: 'right', bold: true })
-    .moveDown(0.5);
+    .fontSize(13)
+    .font('Helvetica-Bold');
+
+  doc.text('Product', 70, tableTop, { width: 220 });
+  doc.text('Quantity', 300, tableTop, { width: 100, align: 'center' });
+  doc.text('Price (R)', 420, tableTop, { width: 100, align: 'right' });
 
   doc
     .strokeColor('#cccccc')
     .lineWidth(1)
-    .moveTo(50, doc.y)
-    .lineTo(550, doc.y)
+    .moveTo(50, tableTop + 18)
+    .lineTo(550, tableTop + 18)
     .stroke();
 
-  // ✅ Table Rows
+  // ----------------- Table Rows -----------------
   let total = 0;
-  items.forEach((item) => {
-    total += parseFloat(item.price * item.quantity);
+  let rowY = tableTop + 25;
 
-    doc
-      .fillColor('#000000')
-      .fontSize(12)
-      .text(item.productName, 70, doc.y + 5, { width: 200 })
-      .text(item.quantity.toString(), 250, doc.y + 5, { width: 100, align: 'center' })
-      .text(`R${parseFloat(item.price).toFixed(2)}`, 350, doc.y + 5, { width: 100, align: 'right' })
-      .moveDown();
+  doc.font('Helvetica').fillColor('#000').fontSize(12);
+
+  items.forEach((item) => {
+    const itemTotal = parseFloat(item.price) * parseInt(item.quantity);
+    total += itemTotal;
+
+    doc.text(item.productName, 70, rowY, { width: 220 });
+    doc.text(item.quantity.toString(), 300, rowY, { width: 100, align: 'center' });
+    doc.text(`R${itemTotal.toFixed(2)}`, 420, rowY, { width: 100, align: 'right' });
+
+    rowY += 20;
   });
 
-  // ✅ Line after items
+  // ----------------- Line after items -----------------
   doc
     .strokeColor('#cccccc')
     .lineWidth(1)
-    .moveTo(50, doc.y + 10)
-    .lineTo(550, doc.y + 10)
+    .moveTo(50, rowY + 5)
+    .lineTo(550, rowY + 5)
     .stroke();
 
-  // ✅ Total Price
+  // ----------------- Total -----------------
   doc
     .fontSize(14)
     .fillColor('#0B3D91')
-    .text(`Total: R${total.toFixed(2)}`, 350, doc.y + 20, {
-      width: 200,
-      align: 'right',
-      bold: true,
-    });
+    .font('Helvetica-Bold')
+    .text(`Total: R${total.toFixed(2)}`, 420, rowY + 15, { width: 100, align: 'right' });
 
-  // ✅ Footer
+  // ----------------- Footer -----------------
   doc
-    .moveDown(2)
+    .moveDown(4)
     .fontSize(10)
     .fillColor('#999999')
-    .text('Thank you for using OrderBoard.', { align: 'center' })
-    .text('This slip was generated digitally.', { align: 'center' });
+    .font('Helvetica-Oblique')
+    .text('Thank you for using OrderBoard!', { align: 'center' })
+    .text('This slip was generated digitally and is valid without a signature.', { align: 'center' });
 
   doc.end();
 

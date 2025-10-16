@@ -1,0 +1,31 @@
+/* MOBILE FIRST */
+.homepage {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: "Poppins", sans-serif;
+    background-color: #f5f5f5;
+  }
+  
+  /* main content padding */
+  .main-content {
+    padding: 1rem;
+  }
+  
+  /* DESKTOP LAYOUT */
+  @media screen and (min-width: 1024px) {
+    .homepage {
+      flex-direction: row;
+    }
+  
+    app-sidenav {
+      flex: 0 0 250px; /* sidebar fixed width */
+      height: 100vh;
+    }
+  
+    .main-content {
+      flex: 1; /* take remaining space */
+      padding: 2rem;
+    }
+  }
+  

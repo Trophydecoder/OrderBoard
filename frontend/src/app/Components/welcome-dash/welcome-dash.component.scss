@@ -1,0 +1,68 @@
+.welcome-board {
+    padding: 1.5rem;
+    font-family: "Poppins", sans-serif;
+  }
+  
+  .welcome-header h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .welcome-header p {
+    font-size: 1rem;
+    color: #555;
+  }
+  
+  .welcome-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .card {
+    background-color: #fff;
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  
+  .card h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .card p {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    color: #e63946; /* highlight color */
+  }
+  
+  /* Desktop */
+  @media screen and (min-width: 1024px) {
+    .welcome-header h2 {
+      font-size: 2rem;
+    }
+  
+    .welcome-header p {
+      font-size: 1.1rem;
+    }
+  
+    .welcome-cards {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+  
+    .card h3 {
+      font-size: 1.1rem;
+    }
+  
+    .card p {
+      font-size: 1.4rem;
+    }
+  }
+  
